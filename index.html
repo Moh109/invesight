@@ -225,7 +225,7 @@
         // Stock analysis functionality
         class StockAnalyzer {
             constructor() {
-                this.apiKey = 'demo'; // Using demo key for GitHub Pages
+                this.apiKey = '8ABXVMAY10I1AV65'; // Real API key for better data access
                 this.form = document.getElementById('stockForm');
                 this.results = document.getElementById('results');
                 this.analyzeBtn = document.getElementById('analyzeBtn');
@@ -253,9 +253,9 @@
                     if (!data) {
                         // Fallback to sample data
                         data = this.generateSampleData(symbol, period);
-                        this.showStatus('warning', `Using sample data for ${symbol} (real-time data unavailable)`);
+                        this.showStatus('warning', `Using sample data for ${symbol} (real-time data unavailable - API rate limits or CORS issues)`);
                     } else {
-                        this.showStatus('success', 'Real-time data loaded successfully!');
+                        this.showStatus('success', `Real-time data loaded successfully for ${symbol}!`);
                     }
                     
                     const metrics = this.calculateMetrics(data);
@@ -268,7 +268,24 @@
             
             async fetchStockData(symbol, period) {
                 try {
-                    // Using Alpha Vantage API (free tier)
+                    // Try Alpha Vantage first
+                    const avData = await this.fetchAlphaVantageData(symbol, period);
+                    if (avData) return avData;
+                    
+                    // Fallback to Yahoo Finance via proxy
+                    const yfData = await this.fetchYahooFinanceData(symbol, period);
+                    if (yfData) return yfData;
+                    
+                    return null;
+                    
+                } catch (error) {
+                    console.error('Data fetching error:', error);
+                    return null;
+                }
+            }
+            
+            async fetchAlphaVantageData(symbol, period) {
+                try {
                     const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${this.apiKey}&outputsize=compact`;
                     
                     const response = await fetch(url);
@@ -301,7 +318,41 @@
                     return stockData;
                     
                 } catch (error) {
-                    console.warn('API fetch failed:', error);
+                    console.error('Alpha Vantage API error:', error);
+                    return null;
+                }
+            }
+            
+            async fetchYahooFinanceData(symbol, period) {
+                try {
+                    // Use a CORS proxy to access Yahoo Finance
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${period}&interval=1d`;
+                    
+                    const response = await fetch(proxyUrl + encodeURIComponent(yahooUrl));
+                    const data = await response.json();
+                    
+                    if (!data.chart || !data.chart.result || data.chart.result.length === 0) {
+                        throw new Error('No data available from Yahoo Finance');
+                    }
+                    
+                    const result = data.chart.result[0];
+                    const timestamps = result.timestamp;
+                    const quotes = result.indicators.quote[0];
+                    
+                    const stockData = timestamps.map((timestamp, index) => ({
+                        date: new Date(timestamp * 1000),
+                        open: quotes.open[index],
+                        high: quotes.high[index],
+                        low: quotes.low[index],
+                        close: quotes.close[index],
+                        volume: quotes.volume[index]
+                    })).filter(d => d.close !== null);
+                    
+                    return stockData;
+                    
+                } catch (error) {
+                    console.error('Yahoo Finance API error:', error);
                     return null;
                 }
             }
