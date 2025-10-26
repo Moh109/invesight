@@ -1,11 +1,15 @@
 # 📈 Invesight - Advanced Stock Prediction & Analysis System
-git hub
-**Invesight** is a comprehensive stock market analysis and prediction system built with Python, featuring machine learning models, technical analysis, and a beautiful dark blue web interface powered by Alpha Vantage API.
 
-![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
-![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)
-![Machine Learning](https://img.shields.io/badge/ML-Scikit--Learn-orange.svg)
-![API](https://img.shields.io/badge/API-Alpha%20Vantage-red.svg)
+**Invesight** is a comprehensive stock market analysis and prediction system built with Python, featuring machine learning models, technical analysis, and a beautiful web interface powered by Alpha Vantage API.
+
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-2.0+-green.svg)](https://flask.palletsprojects.com)
+[![Machine Learning](https://img.shields.io/badge/ML-Scikit--Learn-orange.svg)](https://scikit-learn.org)
+[![API](https://img.shields.io/badge/API-Alpha%20Vantage-red.svg)](https://www.alphavantage.co)
+
+## 🌐 Live Demo
+
+**Try the live application:** [https://moh109.github.io/invesight/](https://moh109.github.io/invesight/)
 
 ## ✨ Features
 
@@ -38,13 +42,13 @@ git hub
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/invesight.git
+git clone https://github.com/Moh109/invesight.git
 cd invesight
 ```
 
 2. **Install dependencies**
 ```bash
-pip install -r requirements.txt
+pip install -r requirements_minimal.txt
 ```
 
 3. **Run the application**
@@ -79,17 +83,17 @@ invesight/
 │
 ├── 🎨 User Interface
 │   ├── comprehensive_web_fixed.py # Main web dashboard (Flask)
+│   ├── index.html                 # Static version for GitHub Pages
 │   ├── visualization.py           # Chart generation with Plotly
 │   └── start.py                   # Application launcher
 │
 ├── 📈 Analysis & Testing
-│   ├── main.py                    # CLI interface
-│   └── test_stock_prediction.py   # Unit tests
+│   └── main.py                    # CLI interface
 │
 └── 📚 Documentation
     ├── README.md                  # This file
-    ├── requirements.txt           # Python dependencies
-    └── PROJECT_SUMMARY.md         # Detailed project overview
+    ├── requirements_minimal.txt   # Python dependencies
+    └── LICENSE                    # MIT License
 ```
 
 ## 🎯 Supported Stocks
@@ -169,14 +173,6 @@ The system calculates 20+ technical indicators:
 - **Color-coded Metrics**: Green/red for gains/losses
 - **Professional Styling**: Clean, modern interface
 
-## 🧪 Testing
-
-Run the test suite to verify functionality:
-
-```bash
-python test_stock_prediction.py
-```
-
 ## 📈 Sample Output
 
 ### Web Dashboard
@@ -235,7 +231,7 @@ Day 5: $180.34 (+2.92%)
 - **requests**: HTTP requests for Alpha Vantage
 - **Alpha Vantage API**: Professional financial data
 
-### See `requirements.txt` for complete list
+See `requirements_minimal.txt` for complete list
 
 ## 🤝 Contributing
 
@@ -260,7 +256,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions:
 
-1. Check the [Issues](https://github.com/yourusername/stock-prediction-system/issues) page
+1. Check the [Issues](https://github.com/Moh109/invesight/issues) page
 2. Create a new issue with detailed description
 3. Include error messages and system information
 
