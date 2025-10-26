@@ -21,6 +21,9 @@ class StockDataCollector:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
+        # Simple cache to avoid repeated API calls
+        self.cache = {}
+        self.cache_timeout = 300  # 5 minutes cache
     
     def get_yahoo_data(self, symbol: str, period: str = "1y", interval: str = "1d") -> pd.DataFrame:
         """
@@ -72,6 +75,16 @@ class StockDataCollector:
             if not api_key:
                 raise ValueError("Alpha Vantage API key is required")
             
+            # Check cache first
+            cache_key = f"alpha_vantage_{symbol}_{function}"
+            current_time = time.time()
+            
+            if cache_key in self.cache:
+                cached_data, cache_time = self.cache[cache_key]
+                if current_time - cache_time < self.cache_timeout:
+                    logger.info(f"Using cached data for {symbol}")
+                    return cached_data
+            
             logger.info(f"Fetching data for {symbol} from Alpha Vantage...")
             
             url = "https://www.alphavantage.co/query"
@@ -85,6 +98,9 @@ class StockDataCollector:
             response = self.session.get(url, params=params)
             response.raise_for_status()
             
+            # Add small delay to respect rate limits (5 calls per minute for free tier)
+            time.sleep(12)  # 12 seconds between calls to stay under 5/minute limit
+            
             data = response.json()
             
             if 'Error Message' in data:
@@ -93,9 +109,20 @@ class StockDataCollector:
             if 'Note' in data:
                 raise ValueError(f"API Limit: {data['Note']}")
             
-            # Extract time series data
-            time_series_key = list(data.keys())[1]  # Skip 'Meta Data' key
-            time_series = data[time_series_key]
+            # Extract time series data - handle different response formats
+            if 'Time Series (Daily)' in data:
+                time_series = data['Time Series (Daily)']
+            elif 'Time Series (1min)' in data:
+                time_series = data['Time Series (1min)']
+            elif 'Time Series (5min)' in data:
+                time_series = data['Time Series (5min)']
+            else:
+                # Fallback: get the second key (first is usually Meta Data)
+                keys = list(data.keys())
+                if len(keys) > 1:
+                    time_series = data[keys[1]]
+                else:
+                    raise ValueError("No time series data found in API response")
             
             # Convert to DataFrame
             df = pd.DataFrame.from_dict(time_series, orient='index')
@@ -108,6 +135,9 @@ class StockDataCollector:
             
             # Add symbol column
             df['symbol'] = symbol
+            
+            # Cache the result
+            self.cache[cache_key] = (df, current_time)
             
             logger.info(f"Successfully fetched {len(df)} records for {symbol}")
             return df

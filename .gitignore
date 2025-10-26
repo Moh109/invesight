@@ -23,6 +23,7 @@ MANIFEST
 
 # Virtual Environment
 venv/
+.venv/
 env/
 ENV/
 env.bak/
@@ -38,6 +39,7 @@ venv.bak/
 # IDE
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
@@ -51,15 +53,17 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# Project Specific
+# Project Specific - Large files not needed for GitHub Pages
 plots/
 data/
+models/
 *.log
 *.csv
 *.json
 *.pkl
 *.h5
 *.model
+*.joblib
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
@@ -77,3 +81,7 @@ instance/
 config.ini
 secrets.json
 api_keys.txt
+
+# Cache directories
+.cache/
+py-yfinance/

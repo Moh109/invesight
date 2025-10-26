@@ -23,10 +23,10 @@ def fetch_real_data(symbol="AAPL", period="1y"):
         print(f"📊 Fetching data for {symbol}...")
         data_collector = StockDataCollector()
         
-        # Try Alpha Vantage first with demo key
+        # Try Alpha Vantage first with real API key (500 requests/day)
         try:
             print(f"🔄 Trying Alpha Vantage for {symbol}...")
-            data = data_collector.get_alpha_vantage_data(symbol, "demo")
+            data = data_collector.get_alpha_vantage_data(symbol, "8ABXVMAY10I1AV65")
             if data is not None and not data.empty:
                 print(f"✅ Successfully fetched {len(data)} days of Alpha Vantage data for {symbol}")
                 return data

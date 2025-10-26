@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invesight - Stock Analysis Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+            margin-bottom: 30px; 
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .form-group { margin-bottom: 20px; }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: bold; 
+            color: #34495e;
+            font-size: 1.1em;
+        }
+        input, select { 
+            width: 100%; 
+            padding: 15px; 
+            border: 2px solid #e0e6ed; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            box-sizing: border-box;
+        }
+        input:focus, select:focus { 
+            outline: none; 
+            border-color: #667eea; 
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+        button { 
+            background: linear-gradient(45deg, #667eea, #764ba2); 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            width: 100%; 
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .results { 
+            margin-top: 30px; 
+            padding: 25px; 
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .metric { 
+            display: inline-block; 
+            margin: 15px; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); 
+            border-radius: 15px; 
+            min-width: 140px; 
+            text-align: center; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .metric:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
+        }
+        .metric-value { 
+            font-size: 28px; 
+            font-weight: bold; 
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .metric-label { 
+            font-size: 14px; 
+            color: #7f8c8d; 
+            margin-top: 8px; 
+            font-weight: 600;
+        }
+        .success { 
+            color: #27ae60; 
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin: 20px 0; 
+            border-left: 5px solid #27ae60;
+            font-weight: bold;
+        }
+        .warning { 
+            color: #e67e22; 
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin: 20px 0; 
+            border-left: 5px solid #e67e22;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #dc3545;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .chart-section { 
+            margin: 30px 0; 
+            padding: 25px; 
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .chart-container { 
+            margin: 20px 0; 
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            color: #2c3e50;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .footer a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Invesight - Stock Analysis Dashboard</h1>
+        
+        <form id="stockForm">
+            <div class="form-group">
+                <label for="symbol">Stock Symbol:</label>
+                <input type="text" id="symbol" name="symbol" placeholder="Enter stock symbol (e.g., AAPL, GOOGL, MSFT)" value="AAPL" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="period">Time Period:</label>
+                <select id="period" name="period">
+                    <option value="1mo">1 Month</option>
+                    <option value="3mo">3 Months</option>
+                    <option value="6mo">6 Months</option>
+                    <option value="1y" selected>1 Year</option>
+                </select>
+            </div>
+            
+            <button type="submit" id="analyzeBtn">🔍 Analyze Stock</button>
+        </form>
+        
+        <div id="results" class="results">
+            <h2 id="resultsTitle">📊 Analysis Results</h2>
+            <div id="statusMessage"></div>
+            <div id="metricsContainer"></div>
+            <div id="chartsContainer"></div>
+        </div>
+        
+        <div class="footer">
+            <p>💡 <strong>Try:</strong> AAPL, GOOGL, MSFT, TSLA, NVDA, AMZN, META, NFLX</p>
+            <p>🔗 Powered by <a href="https://www.alphavantage.co" target="_blank">Alpha Vantage API</a> - Professional Stock Market Data</p>
+            <p>📊 <strong>Note:</strong> This is a static version for GitHub Pages. For full functionality, use the Flask version.</p>
+        </div>
+    </div>
+
+    <script>
+        // Stock analysis functionality
+        class StockAnalyzer {
+            constructor() {
+                this.apiKey = 'demo'; // Using demo key for GitHub Pages
+                this.form = document.getElementById('stockForm');
+                this.results = document.getElementById('results');
+                this.analyzeBtn = document.getElementById('analyzeBtn');
+                
+                this.setupEventListeners();
+            }
+            
+            setupEventListeners() {
+                this.form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.analyzeStock();
+                });
+            }
+            
+            async analyzeStock() {
+                const symbol = document.getElementById('symbol').value.toUpperCase();
+                const period = document.getElementById('period').value;
+                
+                this.showLoading();
+                
+                try {
+                    // Try to get real data first
+                    let data = await this.fetchStockData(symbol, period);
+                    
+                    if (!data) {
+                        // Fallback to sample data
+                        data = this.generateSampleData(symbol, period);
+                        this.showStatus('warning', `Using sample data for ${symbol} (real-time data unavailable)`);
+                    } else {
+                        this.showStatus('success', 'Real-time data loaded successfully!');
+                    }
+                    
+                    const metrics = this.calculateMetrics(data);
+                    this.displayResults(symbol, period, metrics, data);
+                    
+                } catch (error) {
+                    this.showStatus('error', `Error: ${error.message}`);
+                }
+            }
+            
+            async fetchStockData(symbol, period) {
+                try {
+                    // Using Alpha Vantage API (free tier)
+                    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${this.apiKey}&outputsize=compact`;
+                    
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (data['Error Message']) {
+                        throw new Error(data['Error Message']);
+                    }
+                    
+                    if (data['Note']) {
+                        throw new Error('API rate limit exceeded');
+                    }
+                    
+                    const timeSeries = data['Time Series (Daily)'];
+                    if (!timeSeries) {
+                        throw new Error('No data available');
+                    }
+                    
+                    // Convert to our format
+                    const dates = Object.keys(timeSeries).sort();
+                    const stockData = dates.map(date => ({
+                        date: new Date(date),
+                        open: parseFloat(timeSeries[date]['1. open']),
+                        high: parseFloat(timeSeries[date]['2. high']),
+                        low: parseFloat(timeSeries[date]['3. low']),
+                        close: parseFloat(timeSeries[date]['4. close']),
+                        volume: parseInt(timeSeries[date]['5. volume'])
+                    }));
+                    
+                    return stockData;
+                    
+                } catch (error) {
+                    console.warn('API fetch failed:', error);
+                    return null;
+                }
+            }
+            
+            generateSampleData(symbol, period) {
+                // Generate realistic sample data
+                const days = this.getDaysForPeriod(period);
+                const data = [];
+                const basePrice = this.getBasePrice(symbol);
+                
+                for (let i = days; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    
+                    const volatility = 0.02;
+                    const trend = 0.0005;
+                    const change = (Math.random() - 0.5) * volatility + trend;
+                    
+                    const prevPrice = data.length > 0 ? data[data.length - 1].close : basePrice;
+                    const price = prevPrice * (1 + change);
+                    
+                    data.push({
+                        date: date,
+                        open: price * (1 + (Math.random() - 0.5) * 0.01),
+                        high: price * (1 + Math.random() * 0.02),
+                        low: price * (1 - Math.random() * 0.02),
+                        close: price,
+                        volume: Math.floor(Math.random() * 10000000) + 1000000
+                    });
+                }
+                
+                return data;
+            }
+            
+            getDaysForPeriod(period) {
+                const periods = {
+                    '1mo': 30,
+                    '3mo': 90,
+                    '6mo': 180,
+                    '1y': 365
+                };
+                return periods[period] || 365;
+            }
+            
+            getBasePrice(symbol) {
+                const prices = {
+                    'AAPL': 180, 'GOOGL': 140, 'MSFT': 380, 'TSLA': 250,
+                    'AMZN': 228, 'NVDA': 850, 'META': 320, 'NFLX': 450,
+                    'AMD': 140, 'INTC': 35, 'AMC': 5, 'PLTR': 15
+                };
+                return prices[symbol] || 50;
+            }
+            
+            calculateMetrics(data) {
+                const prices = data.map(d => d.close);
+                const volumes = data.map(d => d.volume);
+                
+                const currentPrice = prices[prices.length - 1];
+                const previousPrice = prices[prices.length - 2];
+                const priceChange = ((currentPrice - previousPrice) / previousPrice) * 100;
+                
+                // Calculate volatility (standard deviation of returns)
+                const returns = [];
+                for (let i = 1; i < prices.length; i++) {
+                    returns.push((prices[i] - prices[i - 1]) / prices[i - 1]);
+                }
+                const volatility = Math.sqrt(returns.reduce((sum, r) => sum + r * r, 0) / returns.length) * 100;
+                
+                // Calculate Sharpe ratio (simplified)
+                const avgReturn = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+                const sharpeRatio = avgReturn / (volatility / 100) * Math.sqrt(252);
+                
+                // Calculate max drawdown
+                let maxDrawdown = 0;
+                let peak = prices[0];
+                for (const price of prices) {
+                    if (price > peak) peak = price;
+                    const drawdown = (peak - price) / peak * 100;
+                    if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+                }
+                
+                const avgVolume = volumes.reduce((sum, v) => sum + v, 0) / volumes.length;
+                
+                return {
+                    currentPrice,
+                    priceChange,
+                    volatility,
+                    sharpeRatio,
+                    maxDrawdown,
+                    avgVolume
+                };
+            }
+            
+            displayResults(symbol, period, metrics, data) {
+                document.getElementById('resultsTitle').textContent = `📊 Analysis Results for ${symbol} (${period})`;
+                
+                // Display metrics
+                const metricsContainer = document.getElementById('metricsContainer');
+                metricsContainer.innerHTML = `
+                    <div class="metric">
+                        <div class="metric-value">$${metrics.currentPrice.toFixed(2)}</div>
+                        <div class="metric-label">Current Price</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" style="color: ${metrics.priceChange >= 0 ? 'green' : 'red'};">
+                            ${metrics.priceChange.toFixed(2)}%
+                        </div>
+                        <div class="metric-label">Price Change</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">${metrics.volatility.toFixed(2)}%</div>
+                        <div class="metric-label">Volatility</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">${metrics.sharpeRatio.toFixed(2)}</div>
+                        <div class="metric-label">Sharpe Ratio</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" style="color: red;">${metrics.maxDrawdown.toFixed(2)}%</div>
+                        <div class="metric-label">Max Drawdown</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">${Math.floor(metrics.avgVolume).toLocaleString()}</div>
+                        <div class="metric-label">Avg Volume</div>
+                    </div>
+                `;
+                
+                // Create charts
+                this.createCharts(symbol, data);
+                
+                this.results.style.display = 'block';
+            }
+            
+            createCharts(symbol, data) {
+                const chartsContainer = document.getElementById('chartsContainer');
+                chartsContainer.innerHTML = `
+                    <div class="chart-section">
+                        <h3>📈 Interactive Charts</h3>
+                        
+                        <div class="chart-container">
+                            <h4>1. Price Chart</h4>
+                            <div id="priceChart"></div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <h4>2. Volume Analysis</h4>
+                            <div id="volumeChart"></div>
+                        </div>
+                    </div>
+                `;
+                
+                // Create price chart
+                const priceTrace = {
+                    x: data.map(d => d.date),
+                    y: data.map(d => d.close),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Close Price',
+                    line: { color: '#667eea', width: 2 }
+                };
+                
+                const priceLayout = {
+                    title: `${symbol} Price Chart`,
+                    xaxis: { title: 'Date' },
+                    yaxis: { title: 'Price ($)' },
+                    template: 'plotly_white'
+                };
+                
+                Plotly.newPlot('priceChart', [priceTrace], priceLayout, {responsive: true});
+                
+                // Create volume chart
+                const volumeTrace = {
+                    x: data.map(d => d.date),
+                    y: data.map(d => d.volume),
+                    type: 'bar',
+                    name: 'Volume',
+                    marker: { color: 'rgba(158,202,225,0.8)' }
+                };
+                
+                const volumeLayout = {
+                    title: `${symbol} Volume Analysis`,
+                    xaxis: { title: 'Date' },
+                    yaxis: { title: 'Volume' },
+                    template: 'plotly_white'
+                };
+                
+                Plotly.newPlot('volumeChart', [volumeTrace], volumeLayout, {responsive: true});
+            }
+            
+            showLoading() {
+                this.analyzeBtn.disabled = true;
+                this.analyzeBtn.textContent = '🔄 Analyzing...';
+                this.showStatus('loading', 'Loading stock data...');
+                this.results.style.display = 'block';
+            }
+            
+            showStatus(type, message) {
+                const statusMessage = document.getElementById('statusMessage');
+                statusMessage.innerHTML = `<div class="${type}">${message}</div>`;
+                
+                this.analyzeBtn.disabled = false;
+                this.analyzeBtn.textContent = '🔍 Analyze Stock';
+            }
+        }
+        
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new StockAnalyzer();
+        });
+    </script>
+</body>
+</html>
